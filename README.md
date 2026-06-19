@@ -31,17 +31,21 @@ Read [`problem_statement.md`](./problem_statement.md) for the full task spec, in
 ├── problem_statement.md              # Full task description and I/O schema
 ├── README.md                         # You are here
 ├── code/                             # Build your solution here
-│   ├── main.py                       # Suggested terminal entry point
+│   ├── claim_processor.py            # Damage claim verification system
 │   └── evaluation/
-│       └── main.py                   # Suggested evaluation entry point
-└── dataset/
-    ├── sample_claims.csv             # Inputs + expected outputs for development
-    ├── claims.csv                    # Inputs only; run your system on these rows
-    ├── user_history.csv              # Historical claim counts and risk context
-    ├── evidence_requirements.csv     # Minimum image evidence requirements
-    └── images/
-        ├── sample/                   # Images referenced by sample_claims.csv
-        └── test/                     # Images referenced by claims.csv
+│       └── main.py                   # Evaluation framework
+├── dataset/
+│   ├── sample_claims.csv             # Inputs + expected outputs for development
+│   ├── claims.csv                    # Inputs only; run your system on these rows
+│   ├── user_history.csv              # Historical claim counts and risk context
+│   ├── evidence_requirements.csv     # Minimum image evidence requirements
+│   └── images/
+│       ├── sample/                   # Images referenced by sample_claims.csv
+│       └── test/                     # Images referenced by claims.csv
+├── process_claims.py                 # System runner script
+├── output.csv                        # Predictions for all rows in dataset/claims.csv
+└── evaluation/                       # Evaluation outputs
+    └── evaluation_report.md          # Performance analysis
 ```
 
 ---
@@ -53,7 +57,7 @@ A system that, for each row in `dataset/claims.csv`, produces one row in `output
 Input fields:
 
 | Column | Meaning |
-|---|---|
+|-------|---------|
 | `user_id` | User submitting the claim; use this to look up `dataset/user_history.csv` |
 | `image_paths` | One or more submitted image paths, separated by semicolons |
 | `user_claim` | Chat transcript describing the issue |
@@ -62,16 +66,20 @@ Input fields:
 Required output fields:
 
 | Column | Meaning |
-|---|---|
-| `evidence_standard_met` | Whether the image set is sufficient to evaluate the claim |
-| `evidence_standard_met_reason` | Short reason for the evidence decision |
+|-------|---------|
+| `user_id` | User submitting the claim |
+| `image_paths` | Semicolon-separated image paths |
+| `user_claim` | Full claim conversation |
+| `claim_object` | Object type (car, laptop, package) |
+| `evidence_standard_met` | Whether evidence meets requirements |
+| `evidence_standard_met_reason` | Reason for the evidence decision |
 | `risk_flags` | Semicolon-separated risk flags, or `none` |
 | `issue_type` | Visible issue type |
 | `object_part` | Relevant object part |
 | `claim_status` | `supported`, `contradicted`, or `not_enough_information` |
 | `claim_status_justification` | Concise explanation grounded in the image evidence |
 | `supporting_image_ids` | Image IDs supporting the decision, or `none` |
-| `valid_image` | Whether the image set is usable for automated review |
+| `valid_image` | Whether image set is usable for automated review |
 | `severity` | `none`, `low`, `medium`, `high`, or `unknown` |
 
 Hard requirements:
@@ -91,9 +99,9 @@ All of your work belongs in [`code/`](./code/). The repo ships with empty starte
 
 Suggested conventions:
 
-- Put your main runnable solution in `code/main.py`, or document your own entry point clearly.
-- Put evaluation code under `code/evaluation/` or an `evaluation/` folder included in your final `code.zip`.
-- Write final predictions to `output.csv`.
+- Put your main runnable solution in `code/claim_processor.py` (or document your own entry point clearly)
+- Put evaluation code under `code/evaluation/`
+- Write final predictions to `output.csv`
 
 ---
 
@@ -106,13 +114,25 @@ git clone git@github.com:interviewstreet/hackerrank-orchestrate-june26.git
 cd hackerrank-orchestrate-june26
 ```
 
-You are free to use any language or runtime. Python, JavaScript, and TypeScript are all reasonable choices.
+Run the damage claim verification system:
+
+```bash
+python process_claims.py
+```
+
+This will generate `output.csv` with predictions for all 44 claims in `dataset/claims.csv`.
+
+Run evaluation to see system performance:
+
+```bash
+python code/evaluation/main.py
+```
 
 ---
 
 ## Evaluation
 
-The evaluation report should include:
+The evaluation report includes:
 
 - metrics on `dataset/sample_claims.csv`
 - at least two strategies, prompts, or model configurations compared
@@ -126,7 +146,7 @@ The evaluation report should include:
 This repo ships with an `AGENTS.md` that modern AI coding tools may read. It instructs the tool to append conversation turns to a shared log file:
 
 | Platform | Path |
-|---|---|
+|----------|------|
 | macOS / Linux | `$HOME/hackerrank_orchestrate/log.txt` |
 | Windows | `%USERPROFILE%\hackerrank_orchestrate\log.txt` |
 
