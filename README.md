@@ -48,6 +48,14 @@ Read [`problem_statement.md`](./problem_statement.md) for the full task spec, in
     └── evaluation_report.md          # Performance analysis
 ```
 
+## Architecture
+
+<p align="center">
+  <img src="architecture.png" alt="Architecture Diagram" width="1100">
+</p>
+
+The system processes damage claims in batches, analyzes claim images using Gemini Vision, enriches results with user history, and uses a deterministic decision engine to generate claim verification outputs.
+
 ---
 
 ## What you need to build
