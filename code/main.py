@@ -153,18 +153,13 @@ class DamageClaimSystem:
         return result
 
 
-def load_existing_results(output_path: str) -> Dict[str, Dict]:
-    """Load already-processed claims from output CSV."""
-    existing = {}
+def load_existing_results(output_path: str) -> int:
+    """Return number of rows already processed (output is append-only, preserves input order)."""
     if not os.path.exists(output_path):
-        return existing
+        return 0
     with open(output_path, "r", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            uid = row.get("user_id", "")
-            if uid:
-                existing[uid] = row
-    return existing
+        lines = sum(1 for _ in f)
+    return max(0, lines - 1)  # subtract header
 
 
 def append_result(output_path: str, result: Dict[str, Any]):
@@ -260,13 +255,13 @@ def run_batch(system: DamageClaimSystem, claims_path: str, output_path: str):
     print(f"Claims file: {claims_path}")
     print(f"Output file: {output_path}")
 
-    existing = load_existing_results(output_path)
-    print(f"Already processed: {len(existing)} claims")
+    existing_count = load_existing_results(output_path)
+    print(f"Already processed: {existing_count} claims")
 
     with open(claims_path, "r", encoding="utf-8-sig") as f:
         all_claims = list(csv.DictReader(f))
 
-    remaining = [c for c in all_claims if c.get("user_id") not in existing]
+    remaining = all_claims[existing_count:]
     print(f"Remaining to process: {len(remaining)} claims")
 
     if not remaining:
@@ -294,7 +289,7 @@ def run_batch(system: DamageClaimSystem, claims_path: str, output_path: str):
                 raise
 
     elapsed = time.time() - start_time
-    total_done = len(existing) + processed_this_run
+    total_done = existing_count + processed_this_run
     print(f"\n=== Run complete ===")
     print(f"Claims processed this run: {processed_this_run}")
     print(f"Total claims processed: {total_done}/{len(all_claims)}")
