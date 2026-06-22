@@ -134,7 +134,7 @@ class DamageClaimSystem:
             "image_paths": image_paths_raw,
             "user_claim": claim_text,
             "claim_object": claim_object,
-            "evidence_standard_met": evidence_met,
+            "evidence_standard_met": str(evidence_met).lower(),
             "evidence_standard_met_reason": evidence_reason,
             "risk_flags": ";".join(risk_flags) if risk_flags else "none",
             "issue_type": issue_type,
@@ -142,7 +142,7 @@ class DamageClaimSystem:
             "claim_status": claim_status,
             "claim_status_justification": final_justification,
             "supporting_image_ids": supporting_images,
-            "valid_image": valid_image,
+            "valid_image": str(valid_image).lower(),
             "severity": severity,
         }
 

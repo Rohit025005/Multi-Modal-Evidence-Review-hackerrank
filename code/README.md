@@ -4,85 +4,11 @@ A multimodal damage-claim verification system that processes insurance claims us
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                    DAMAGE CLAIM VERIFICATION SYSTEM              │
-└──────────────────────────────────────────────────────────────────┘
+<p align="center">
+  <img src="../architecture.png" alt="Architecture Diagram" width="1100">
+</p>
 
-  INPUTS                         PIPELINE                         OUTPUT
-  ───────                        ────────                         ──────
-
-┌──────────────┐
-│ claims.csv   │──►┌───────────────────────────────────────────────┐
-│              │   │              BATCH RUNNER                     │
-│ user_id      │   │  (main.py - resumable by row position)        │
-│ image_paths  │   └──────────────────────┬────────────────────────┘
-│ user_claim   │                          │ for each claim
-│ claim_object │                          ▼
-└──────────────┘               ┌──────────────────┐
-┌──────────────┐               │ GEMINI PERCEPTION │  1 API call per claim
-│ images/      │──►            │  (perception.py)  │  (conversation + all
-│              │   ┌──────────►│                   │   images combined)
-│ img_1.jpg    │   │          │  - claim fields    │
-│ img_2.jpg    │───┘          │  - per-image obs   │
-│ ...          │              └────────┬───────────┘
-└──────────────┘                       │
-┌──────────────┐                       │ extracted_claim
-│ user_history │                       │ image_observations
-│              │──►  ┌────────┐        │
-│ history.csv  │     │history │◄───────┤
-└──────────────┘     │scorer  │        │
-                     └───┬────┘        │
-                         │             ▼
-                         │    ┌─────────────────────────────────────┐
-                         │    │    DETERMINISTIC DECISION ENGINE    │
-                         │    │         (decision_engine.py)        │
-                         │    │                                     │
-                         │    │  ┌──────────────────────────────┐   │
-                         ├────┼─►│ 1. Evidence Validator        │   │
-                         │    │  │    - object shown?           │  │
-                         │    │  │    - requirements met?        │  │
-                         │    │  └──────────┬───────────────────┘   │
-                         │    │             │                       │
-                         │    │  ┌──────────▼───────────────────┐   │
-                         │    │  │ 2. Claim Status Decision     │   │
-                         │    │  │    - damage on claimed part? │   │
-                         │    │  │    - supported/contradicted/ │   │
-                         │    │  │      not_enough_information  │   │
-                         │    │  └──────────┬───────────────────┘   │
-                         │    │             │                       │
-                         │    │  ┌──────────▼───────────────────┐   │
-                         │    │  │ 3. Severity (prior-based)    │   │
-                         │    │  │    - scratch -> low          │  │
-                         │    │  │    - dent -> medium          │  │
-                         │    │  │    - broken_part -> high     │  │
-                         │    │  └──────────┬───────────────────┘  │
-                         │    │             │                      │
-                         │    │  ┌──────────▼───────────────────┐  │
-                         │    │  │ 4. Risk Flags                │  │
-                         │    │  │    - image quality           │  │
-                         │    │  │    - history flags           │  │
-                         │    │  │    - claim mismatch          │  │
-                         │    │  └──────────┬───────────────────┘  │
-                         │    │             │                      │
-                         │    │  ┌──────────▼───────────────────┐  │
-                         │    │  │ 5. Justification             │  │
-                         │    │  │    - image-grounded text     │  │
-                         │    │  └──────────┬───────────────────┘  │
-                         │    └─────────────┼──────────────────────┘
-                         │                  ▼
-                         │    ┌──────────────────────┐
-                         └───►│   OUTPUT FIELDS      │
-                              │                      │
-                              │  issue_type           │
-                              │  object_part          │
-                              │  claim_status         │  --> output.csv
-                              │  severity             │
-                              │  supporting_image_ids │
-                              │  risk_flags           │
-                              │  justification        │
-                              └──────────────────────┘
-```
+The system processes damage claims in batches, analyzes claim images using Gemini Vision, enriches results with user history, and uses a deterministic decision engine to generate claim verification outputs.
 
 - **Gemini 2.5 Flash** handles perception only: extracts claim fields from conversation and analyzes each image visually.
 - **Deterministic rules** handle all decisions: evidence validation, claim status, severity, risk flags, justification.
@@ -103,6 +29,19 @@ This separation ensures Gemini never directly decides claim outcomes.
 | `gemini_client.py` | Gemini API wrapper with content-based caching and retry logic. |
 | `mappings.py` | Centralized domain mappings: issue type canonicalization, part normalization, severity priors, risk flag normalization. |
 | `evaluation/main.py` | Per-field accuracy evaluation against expected outputs. |
+
+## Setup
+
+```bash
+pip install -r requirements.txt
+```
+
+Create a `.env` file:
+
+```env
+GEMINI_API_KEY=your_api_key_here
+```
+
 
 ## Usage
 

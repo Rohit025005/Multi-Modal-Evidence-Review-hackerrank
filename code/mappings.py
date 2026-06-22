@@ -40,7 +40,6 @@ ISSUE_TYPE_CANONICAL = {
     "scuff": "scratch",
     "scuffed": "scratch",
     "abrasion": "scratch",
-    "mark": "scratch",
     "marking": "scratch",
 
     # crack variants
@@ -90,7 +89,6 @@ ISSUE_TYPE_CANONICAL = {
     "crushed": "crushed_packaging",
     "crumpled_packaging": "crushed_packaging",
     "dented_packaging": "crushed_packaging",
-    "dent": "dent",  # careful: dent on package = crushed_packaging, but dent on car = dent
 
     # water_damage variants
     "water_damage": "water_damage",
@@ -105,7 +103,7 @@ ISSUE_TYPE_CANONICAL = {
     "stained": "stain",
     "discoloration": "stain",
     "discolored": "stain",
-    "mark": "stain",  # careful: mark on package could be stain
+    "stain_mark": "stain",
 
     # none
     "none": "none",
@@ -153,6 +151,7 @@ PART_CANONICAL = {
     "chassis": "body",
     "frame": "body",
     "trunk": "body",
+    "casing": "body",
 
     # Laptop parts
     "screen": "screen",
@@ -167,22 +166,19 @@ PART_CANONICAL = {
     "hinges": "hinge",
     "lid": "lid",
     "cover": "lid",
-    "corner": "corner",
     "edge": "corner",
     "port": "port",
     "ports": "port",
     "connector": "port",
     "base": "base",
     "bottom": "base",
-    "chassis": "body",
-    "casing": "body",
 
     # Package parts
     "box": "box",
     "package_box": "box",
     "shipping_box": "box",
     "package_corner": "package_corner",
-    "corner": "package_corner",
+    "corner": "corner",
     "package_side": "package_side",
     "side": "package_side",
     "seal": "seal",

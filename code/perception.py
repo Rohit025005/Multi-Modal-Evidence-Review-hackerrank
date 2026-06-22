@@ -5,7 +5,7 @@ One Gemini call per claim: conversation + all images.
 Extracts claim fields and per-image observations in a single request.
 Gemini handles perception only; deterministic code handles all decisions.
 
-Fallback: if Gemini fails, delegates to claim_extractor + image_analyzer (two calls).
+Fallback: if Gemini fails, returns empty observations with conservative defaults.
 """
 
 import os
@@ -297,9 +297,10 @@ def _fallback_perceive(
     resolved_paths: List[str] = None,
     image_ids: List[str] = None,
 ) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
-    """Fallback: use old two-step extraction (claim_extractor + image_analyzer).
+    """Fallback: return conservative defaults when Gemini perception fails.
 
-    This makes 1 + N API calls instead of 1, but handles Gemini failures gracefully.
+    Does not attempt re-call — returns empty observations so the decision engine
+    defaults to not_enough_information with appropriate risk flags.
     """
     print("    [perception] Using fallback two-step extraction")
 

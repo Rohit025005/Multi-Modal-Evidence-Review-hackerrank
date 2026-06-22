@@ -31,9 +31,18 @@ Read [`problem_statement.md`](./problem_statement.md) for the full task spec, in
 ├── problem_statement.md              # Full task description and I/O schema
 ├── README.md                         # You are here
 ├── code/                             # Build your solution here
-│   ├── claim_processor.py            # Damage claim verification system
+│   ├── main.py                       # Entry point (batch or debug mode)
+│   ├── perception.py                 # Gemini perception: one call per claim
+│   ├── decision_engine.py            # Deterministic claim decision logic
+│   ├── gemini_client.py              # Gemini API wrapper + content-based caching
+│   ├── mappings.py                   # Domain label canonicalization
+│   ├── evidence_validator.py         # Evidence requirement checks
+│   ├── history_scorer.py             # User history risk lookup
+│   ├── claim_extractor.py            # Fallback claim extraction
+│   ├── image_analyzer.py             # Fallback per-image analysis
 │   └── evaluation/
-│       └── main.py                   # Evaluation framework
+│       ├── main.py                   # Evaluation framework
+│       └── evaluation_report.md      # Strategy comparison and metrics
 ├── dataset/
 │   ├── sample_claims.csv             # Inputs + expected outputs for development
 │   ├── claims.csv                    # Inputs only; run your system on these rows
@@ -42,10 +51,7 @@ Read [`problem_statement.md`](./problem_statement.md) for the full task spec, in
 │   └── images/
 │       ├── sample/                   # Images referenced by sample_claims.csv
 │       └── test/                     # Images referenced by claims.csv
-├── process_claims.py                 # System runner script
-├── output.csv                        # Predictions for all rows in dataset/claims.csv
-└── evaluation/                       # Evaluation outputs
-    └── evaluation_report.md          # Performance analysis
+└── output.csv                        # Predictions for all rows in dataset/claims.csv
 ```
 
 ## Architecture
@@ -107,7 +113,7 @@ All of your work belongs in [`code/`](./code/). The repo ships with empty starte
 
 Suggested conventions:
 
-- Put your main runnable solution in `code/claim_processor.py` (or document your own entry point clearly)
+- Put your main runnable solution in `code/main.py`
 - Put evaluation code under `code/evaluation/`
 - Write final predictions to `output.csv`
 
@@ -125,24 +131,29 @@ cd hackerrank-orchestrate-june26
 Run the damage claim verification system:
 
 ```bash
-python process_claims.py
-```
+# Process sample claims (20 claims)
+python code/main.py --input dataset/sample_claims.csv --output output_sample.csv
 
-This will generate `output.csv` with predictions for all 44 claims in `dataset/claims.csv`.
+# Process test claims (44 claims)
+python code/main.py --input dataset/claims.csv --output output.csv
+
+# Debug a single claim
+python code/main.py --debug user_001 --input dataset/sample_claims.csv
+```
 
 Run evaluation to see system performance:
 
 ```bash
-python code/evaluation/main.py
+python code/evaluation/main.py output_sample.csv dataset/sample_claims.csv
 ```
 
 ---
 
 ## Evaluation
 
-The evaluation report includes:
+The evaluation report (at `code/evaluation/evaluation_report.md`) includes:
 
-- metrics on `dataset/sample_claims.csv`
+- per-field accuracy on `dataset/sample_claims.csv`
 - at least two strategies, prompts, or model configurations compared
 - the final strategy used for `output.csv`
 - operational analysis covering model calls, token usage, image usage, approximate cost, runtime, and TPM/RPM considerations
